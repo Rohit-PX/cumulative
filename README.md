@@ -1,10 +1,10 @@
-# cumulative
+# Calculate cumulative vesting schedule
 
-# This is a command line program that reads in a file of vesting events and outputs a vesting schedule to stdout.
+### This is a command line program that reads in a file of vesting events and outputs a vesting schedule to stdout.
 
-#  Requires go 1.17 or higher 
+###  Requires go 1.17 or higher 
 
-# Running the program
+### Running the program
  * Create a path anywhere on your system: mkdir -p /root/git/go/src/github.com/
  * Unzip the folder into the above path
  * You should now have the path /root/git/go/src/github.com/cumulative
@@ -23,14 +23,10 @@
  	./cumulative <path-to-your-csv-file> 2020-04-01 2
  ```
 
-# Some tests csv files have been provided in pkg/testing folder
-
-# Unit tests are present in pkg/testing as well
-
-# Code has been divided into vesting and utils packages 
-
-# Vesting package has vesting related methods/APIs
-
-# Utils package as utility methods such as date conversion and validation
+### Some tests csv files have been provided in pkg/testing folder
+### Unit tests are present in pkg/testing as well
+### Code has been divided into vesting and utils packages 
+### Vesting package has vesting related methods/APIs
+### Utils package as utility methods such as date conversion and validation
  
 
