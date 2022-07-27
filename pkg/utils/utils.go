@@ -29,7 +29,7 @@ func ConvertToDate(str string) (time.Time, error) {
 	layout := "2006-01-02"
 	t, err := time.Parse(layout, str)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("Invalid date format. Error: %v. Please pass date in the following format - YYYY-MM-DD")
+		return time.Time{}, fmt.Errorf("Invalid date format. Error: %v. Please pass date in the following format - YYYY-MM-DD", err)
 	}
 	return t, nil
 }
