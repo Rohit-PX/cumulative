@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -94,7 +95,7 @@ func GetVestingSchedule(events Events, precision int) {
 				current.Quantity = current.Quantity - e.Quantity
 			}
 		} else {
-			// Key not found
+			// Key not found, so creating a new entry
 			vestingMap[key] = &Event{
 				EmployeeID: e.EmployeeID,
 				Name:       e.Name,
@@ -104,10 +105,28 @@ func GetVestingSchedule(events Events, precision int) {
 		}
 	}
 
+	// Create an event list from the vesting map so that it can be sorted
+	flattenedVestingSchedule := Init()
 	for _, event := range vestingMap {
-		PrintEvent(event, precision)
+		*flattenedVestingSchedule = append(*flattenedVestingSchedule, event)
 	}
+	sort.Sort(flattenedVestingSchedule)
+	PrintEvents(flattenedVestingSchedule, precision, true)
+
 }
+
+func (e Events) Len() int { return len(e) }
+
+func (e Events) Less(i, j int) bool {
+	if e[i].EmployeeID == e[j].EmployeeID {
+		return e[i].AwardID < e[j].AwardID
+	}
+	return e[i].EmployeeID < e[j].EmployeeID
+}
+
+func (e Events) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
+
+// flatten vesting map
 
 /*
 func round(num float64) int {
@@ -148,18 +167,21 @@ func ConvertToDate(str string) (time.Time, error) {
 	return t, nil
 }
 
-func PrintEvent(e *Event, precision int) {
-	fmt.Printf("%s %s %s %s %s %s\n", e.Type, e.EmployeeID, e.Name, e.AwardID, (e.EventDate).Format("2006-01-02"), strconv.FormatFloat(e.Quantity, 'f', precision, 64))
+func PrintEvent(e *Event, precision int, printOnlyScheduledVesting bool) {
+	if printOnlyScheduledVesting {
+		fmt.Printf("%s %s %s %s\n", e.EmployeeID, e.Name, e.AwardID, strconv.FormatFloat(e.Quantity, 'f', precision, 64))
+	} else {
+		fmt.Printf("%s %s %s %s %s %s\n", e.Type, e.EmployeeID, e.Name, e.AwardID, (e.EventDate).Format("2006-01-02"), strconv.FormatFloat(e.Quantity, 'f', precision, 64))
+	}
 }
 
-func PrintEvents(events *Events, precision int) {
+func PrintEvents(events *Events, precision int, printOnlyScheduledVesting bool) {
 	for _, e := range *events {
-		PrintEvent(e, precision)
+		PrintEvent(e, precision, printOnlyScheduledVesting)
 	}
 }
 
 func main() {
-
 	// TODO add validation of input params
 	fileName, targetDate, precision, err := ValidateParams(os.Args[1], os.Args[2], os.Args[3])
 	if err != nil {
@@ -171,9 +193,10 @@ func main() {
 	allEvents, err := GetVestingFromFile(fileName)
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
-	os.Exit(1)
-	//PrintEvents(eventsDB, precision)
+	PrintEvents(eventsDB, precision, false)
+	fmt.Println("-----------------------------------------------------")
 	filteredEvents := GetVestingBefore(targetDate, allEvents, precision)
 	GetVestingSchedule(filteredEvents, precision)
 }
