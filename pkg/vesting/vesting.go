@@ -36,6 +36,22 @@ func InitVestingEvents() *Events {
 	return &Events{}
 }
 
+// Implement the sort interface on Events
+func (e Events) Len() int { return len(e) }
+
+func (e Events) Less(i, j int) bool {
+	// Sort by Employee ID and Award ID
+	if e[i].EmployeeID == e[j].EmployeeID {
+		return e[i].AwardID < e[j].AwardID
+	}
+	return e[i].EmployeeID < e[j].EmployeeID
+}
+
+func (e Events) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
+
+//Begin vesting APIs
+
+// GetVestingFromFile - given a file name generate list of events or return errors if any
 func GetVestingFromFile(fileName string) (*Events, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -81,19 +97,6 @@ func GetVestingFromFile(fileName string) (*Events, error) {
 
 }
 
-// Implement the sort interface on Events
-func (e Events) Len() int { return len(e) }
-
-func (e Events) Less(i, j int) bool {
-	// Sort by Employee ID and Award ID
-	if e[i].EmployeeID == e[j].EmployeeID {
-		return e[i].AwardID < e[j].AwardID
-	}
-	return e[i].EmployeeID < e[j].EmployeeID
-}
-
-func (e Events) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
-
 // GetVestingBefore - from the given list of events returns events before (and including) the given date, with given precision
 func GetVestingBefore(t time.Time, events *Events, precision int) Events {
 	vestingBefore := InitVestingEvents()
@@ -106,7 +109,7 @@ func GetVestingBefore(t time.Time, events *Events, precision int) Events {
 	return *vestingBefore
 }
 
-// GetVestingSchedule - given a list of events and precision returns a list of events with cumulative vesting calculated for employee
+// GetVestingSchedule - given a list of events and precision returns a list of events with cumulative vesting calculated for employees
 // Vesting events are sorted by Employee ID and Award ID
 func GetVestingSchedule(events Events, precision int) *Events {
 	vestingMap := make(map[string]*Event)
