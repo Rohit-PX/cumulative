@@ -10,8 +10,6 @@ import (
 )
 
 func main() {
-	// TODO add validation of input params
-
 	if len(os.Args) < 4 {
 		log.Fatal(fmt.Errorf("Not enough arguments passed to run the program.\nExample usage: ./cumulative <path-to-file> 2020-01-01 2"))
 	}
