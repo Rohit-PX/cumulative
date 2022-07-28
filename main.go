@@ -20,12 +20,18 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Get all vesting events from file
 	allEvents, err := vesting.GetVestingFromFile(fileName)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
+	// Filter events based on the target date
 	filteredEvents := vesting.GetVestingBefore(targetDate, allEvents, precision)
+
+	// Calculate cumulative vesting for the filtered events
 	cumulativeVesting := vesting.GetVestingSchedule(filteredEvents, precision)
+
+	// Print cumulative vesting
 	vesting.PrintEvents(cumulativeVesting, precision, true)
 }

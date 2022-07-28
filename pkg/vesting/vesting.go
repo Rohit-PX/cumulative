@@ -1,11 +1,12 @@
 package vesting
 
 import (
-	"encoding/csv"
+	"bufio"
 	"fmt"
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cumulative/pkg/utils"
@@ -41,14 +42,20 @@ func GetVestingFromFile(fileName string) (*Events, error) {
 		return nil, fmt.Errorf("Failed to open file %s, error: %v", fileName, err)
 	}
 
-	records, err := csv.NewReader(file).ReadAll()
+	vestingRecords := bufio.NewScanner(file)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read CSV file %s, error: %v", fileName, err)
 	}
 
 	eventsDB = InitVestingEvents()
 
-	for _, event := range records {
+	// Read file line by line so that we don't load the entire file into memory for reading
+	// This way large input files should work without any issues
+	for vestingRecords.Scan() {
+		event := strings.Split(vestingRecords.Text(), ",")
+		if len(event) != 6 {
+			return nil, fmt.Errorf("Input file %s is not formatted according to specification. Exiting.", fileName)
+		}
 		e := &Event{
 			Type:       EventType(event[0]),
 			EmployeeID: event[1],
@@ -78,6 +85,7 @@ func GetVestingFromFile(fileName string) (*Events, error) {
 func (e Events) Len() int { return len(e) }
 
 func (e Events) Less(i, j int) bool {
+	// Sort by Employee ID and Award ID
 	if e[i].EmployeeID == e[j].EmployeeID {
 		return e[i].AwardID < e[j].AwardID
 	}
@@ -98,6 +106,8 @@ func GetVestingBefore(t time.Time, events *Events, precision int) Events {
 	return *vestingBefore
 }
 
+// GetVestingSchedule - given a list of events and precision returns a list of events with cumulative vesting calculated for employee
+// Vesting events are sorted by Employee ID and Award ID
 func GetVestingSchedule(events Events, precision int) *Events {
 	vestingMap := make(map[string]*Event)
 	for _, e := range events {
@@ -129,6 +139,7 @@ func GetVestingSchedule(events Events, precision int) *Events {
 
 }
 
+// Prints an event or cumulative vesting event based on the printOnlyCumulativeVesting flag
 func PrintEvent(e *Event, precision int, printOnlyCumulativeVesting bool) {
 	if printOnlyCumulativeVesting {
 		fmt.Printf("%s %s %s %s\n", e.EmployeeID, e.Name, e.AwardID, strconv.FormatFloat(e.Quantity, 'f', precision, 64))
@@ -137,6 +148,7 @@ func PrintEvent(e *Event, precision int, printOnlyCumulativeVesting bool) {
 	}
 }
 
+// Prints list of events or cumulative vesting based on the printOnlyCumulativeVesting flag
 func PrintEvents(events *Events, precision int, printOnlyCumulativeVesting bool) {
 	for _, e := range *events {
 		PrintEvent(e, precision, printOnlyCumulativeVesting)
